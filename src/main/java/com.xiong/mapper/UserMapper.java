@@ -1,6 +1,7 @@
 package com.xiong.mapper;
 
 import com.xiong.entity.User;
+import com.xiong.utils.ReturnInfo;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -20,4 +21,6 @@ public interface UserMapper {
     public int saveUser(User user);
 
     public int delUserById(Integer id);
+
+    public List<User> findByNameAndPassword(@Param("name")String name, @Param("password")String password);
 }

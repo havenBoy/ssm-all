@@ -2,6 +2,7 @@ package com.xiong.service.impl;
 
 import com.xiong.entity.User;
 import com.xiong.mapper.UserMapper;
+import com.xiong.utils.ReturnInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,5 +48,10 @@ public class UserServiceImpl implements UserMapper{
     @Override
     public int delUserById(Integer id) {
         return userMapper.delUserById(id);
+    }
+
+    @Override
+    public List<User> findByNameAndPassword(String name, String password) {
+        return userMapper.findByNameAndPassword(name, password);
     }
 }

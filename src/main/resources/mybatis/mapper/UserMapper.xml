@@ -11,6 +11,10 @@
             limit #{start},#{end}
     </select>
 
+    <select id="findByNameAndPassword" parameterType="java.lang.String" resultType="com.xiong.entity.User">
+        SELECT * FROM user
+        where username = #{name} and password = #{password}
+    </select>
     <select id="findAll" resultType="com.xiong.entity.User" >
         select * from user order by id
     </select>

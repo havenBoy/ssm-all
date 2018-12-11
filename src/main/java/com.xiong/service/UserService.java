@@ -1,6 +1,7 @@
 package com.xiong.service;
 
 import com.xiong.entity.User;
+import com.xiong.utils.ReturnInfo;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,4 +23,5 @@ public interface UserService {
 
     public int delUserById(Integer id);
 
+    public List<User> findByNameAndPassword(String name, String password);
 }

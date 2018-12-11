@@ -37,7 +37,6 @@
     <tx:annotation-driven transaction-manager="dataSourceTransactionManager"/>
 
     <!-- redis 配置,也可以把配置挪到properties配置文件中,再读取 -->
-
     <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
         <constructor-arg index="0" ref="jedisPoolConfig" />
         <!-- 端口，默认6379 -->
@@ -48,9 +47,9 @@
         -->
     </bean>
     <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
-        <property name="maxIdle" value="100"/><!-- 最大闲置 -->
-        <property name="minIdle" value="10"/><!-- 最小闲置 -->
-        <property name="testOnBorrow" value="true"/><!-- 可以获取 -->
+        <property name="maxIdle" value="${redis.maxIdle}"/><!-- 最大闲置 -->
+        <property name="maxWaitMillis" value="${redis.maxWait}" />
+        <property name="testOnBorrow" value="${redis.testOnBorrow}" />
     </bean>
 
     <!-- Spring 整合 Mybatis -->
