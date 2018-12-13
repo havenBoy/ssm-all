@@ -10,11 +10,10 @@
   - 1 spring相关     --    <version>4.1.4.RELEASE </version>
   - 2 mybatis相关  --    <version>3.4.1</version>
   - 3 spring-mybatis整合包  --   <version>1.3.1</version>
-  - 4 日志log4j    --   <version>1.2.3</version>
+  - 4 日志log4j 或者 logback    --   <version>1.2.3</version>
   - 5 数据库连接池(druid,c3p0)  --    <version>0.9.5.2</version>
   - 6 数据库驱动  --   <version>5.1.41</version>
   - 7 json转化包   --   <version>2.8.7</version>    --- fastjson
-  - 8 整合redis -- 
 
 * 3  配置web.xml
 
@@ -61,7 +60,7 @@
       <!-- 配置springMVC需要加载的配置文件-->
       <init-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>classpath:spring-mvc.xml</param-value>
+        <param-value>classpath:springmvc.xml</param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
       <async-supported>true</async-supported>
@@ -89,9 +88,9 @@
          xmlns:tx="http://www.springframework.org/schema/tx"
          xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
          xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
-  		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-  		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
-  		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
   
   
       <!-- 组件扫描 -->
@@ -119,22 +118,6 @@
           <property name="dataSource" ref="dataSource"></property>
       </bean>
       <tx:annotation-driven transaction-manager="dataSourceTransactionManager"/>
-  
-      <!-- redis 配置,也可以把配置挪到properties配置文件中,再读取 -->
-      <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
-          <constructor-arg index="0" ref="jedisPoolConfig" />
-          <!-- 端口，默认6379 -->
-          <constructor-arg index="2" value="${redis.port}"  name="port" type="int"/>
-          <constructor-arg index="3" value="5000"  name="timeout" type="int"/>
-          <constructor-arg index="1" value="${redis.ip}" name="host" type="java.lang.String"/>
-          <!-- 如果你需要配置密码 <constructor-arg index="4" value="你的密码" name="password" type="java.lang.String"/>
-          -->
-      </bean>
-      <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
-          <property name="maxIdle" value="${redis.maxIdle}"/><!-- 最大闲置 -->
-          <property name="maxWaitMillis" value="${redis.maxWait}" />
-          <property name="testOnBorrow" value="${redis.testOnBorrow}" />
-      </bean>
   
       <!-- Spring 整合 Mybatis -->
       <!--1. SqlSession  -->
@@ -186,20 +169,25 @@
 
 * 日志记录
 
-  * log4j.properties
+  * logback.xml
 
-    ```properties
-    log4j.rootLogger=debug,Console
-    
-    log4j.appender.Console=org.apache.log4j.ConsoleAppender
-    log4j.appender.Console.Target=System.out
-    log4j.appender.Console.layout=org.apache.log4j.PatternLayout
-    log4j.appender.Console.layout.ConversionPattern=[%p][%d{yyyy-MM-dd HH\:mm\:ss,SSS}][%c]%m%n
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration debug="true">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <root level="debug">
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </configuration>
     ```
 
 * mapper.xml
 
-  * ***Mapper.xml
+  *  ***Mapper.xml
 
     ```xml
     <?xml version="1.0" encoding="UTF-8" ?>
@@ -208,38 +196,30 @@
             "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
     
     <mapper namespace="com.xiong.mapper.UserMapper">
-    
-        <select id="findByPage" parameterType="java.lang.Integer" resultType="com.xiong.entity.User" >
-            select * from user
-             order by id
-                limit #{start},#{end}
-        </select>
-    
-        <select id="findByNameAndPassword" parameterType="java.lang.String" resultType="com.xiong.entity.User">
-            SELECT * FROM user
-            where username = #{name} and password = #{password}
-        </select>
+        <!--不做映射的 -->
         <select id="findAll" resultType="com.xiong.entity.User" >
-            select * from user order by id
+            select * from user
         </select>
-    
-        <insert id="addUser" parameterType="com.xiong.entity.User">
-            INSERT INTO user (id,username,age,address,desc) VALUES (#{id},#{username},#{age},#{address},#{desc})
-        </insert>
-    
-        <!-- 修改用户信息 -->
-        <update id="saveUser" parameterType="com.xiong.entity.User">
-            UPDATE user u set u.username = #{username}, u.age = #{age},
-            u.address = #{address}, u.desc = #{desc}
-            where id = #{id}
-        </update>
-    
-        <!-- 删除用户信息 -->
-        <delete id="delUserById" parameterType="java.lang.Integer">
-            DELETE FROM user where id = #{id}
-        </delete>
-    
+        <!--做映射的 -->
+    	<select id="getAllEmps" resultMap="myEmpsAndDept" >
+    		select e.id eid, e.last_name,e.email,e.gender, d.id did, d.dept_name
+    		from tbl_employee e ,tbl_dept d 
+    		where e.d_id = d.id 
+    	</select>
+    	<resultMap type="com.atguigu.ssm.beans.Employee" id="myEmpsAndDept">
+    		<id column="eid" property="id"/>
+    		<result column="last_name" property="lastName"/>
+    		<result column="email" property="email"/>
+    		<result column="gender" property="gender"/>
+    		
+    		<association property="dept"
+                         javaType="com.atguigu.ssm.beans.Department">
+    			<id column="did" property="id"/>
+    			<result column="dept_name" property="departmentName"/>
+    		</association>
+    	</resultMap>
     </mapper>
+    
     ```
 
 ​          

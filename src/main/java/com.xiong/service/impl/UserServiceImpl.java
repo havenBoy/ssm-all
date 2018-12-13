@@ -27,6 +27,16 @@ public class UserServiceImpl implements UserMapper{
     }
 
     @Override
+    public List<User> checkName(String name) {
+        return userMapper.checkName(name);
+    }
+
+    @Override
+    public int changePassword(String name, String pasword, String repassword) {
+        return  userMapper.changePassword(name, pasword,repassword);
+    }
+
+    @Override
     public List<User> findByPage(Integer page, Integer limit) {
         int start = (page-1) * limit ;
         int end = page * limit;

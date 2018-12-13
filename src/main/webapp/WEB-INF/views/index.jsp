@@ -3,7 +3,7 @@
 <%@ include file="../js/common.jsp" %>
 <html>
 <head>
-    <title>Insert title here</title>
+    <title>用户登陆</title>
 </head>
 <html>
 <body background="${pageContext.request.getContextPath()}/static/image/login.jpg">
@@ -21,11 +21,23 @@
         <div class="layui-input-inline login-btn">
             <button type="button" class="layui-btn layui-btn-normal" id="login">登录</button>
         </div>
-        <p><a href="register.html" class="fl"></a><a href="javascript:;" class="fr">忘记密码？</a></p>
+        <p><a href="register.html" class="fl"></a><a href="${pageContext.request.getContextPath()}/register" class="fr">忘记密码？</a></p>
     </form>
 
     <script type="text/javascript">
-        $('#login').click(function () {
+
+        //绑定全局的回车事件
+        $(function(){
+            document.onkeydown = function(e){
+                var ev = document.all ? window.event : e;
+                if(ev.keyCode==13) {
+                    $('#login').click();
+                }
+            }
+            $("input[name='account']").focus();
+        });
+
+        $('#login').click(function(){
             var name = $("input[name='account']").val();
             var password = $("input[name='password']").val();
             $.ajax({
@@ -41,7 +53,9 @@
                 //请求完成时的处理
                 success: function (ret) {
                     if(ret.code == 1) {
-                        layer.msg("登录成功！");
+                        layer.msg("登录成功！",function () {
+                            window.location.href = "${pageContext.request.getContextPath()}/list";
+                        });
                     } else {
                         layer.msg("登录失败！");
                     }

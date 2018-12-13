@@ -35,6 +35,30 @@ public class IndexController {
         return "index";
     }
 
+    @RequestMapping("/register")
+    public String register() {
+        return "register";
+    }
+
+    @RequestMapping("/rePassword")
+    @ResponseBody
+    public ReturnInfo setPassword(String name, String password, String repassword) {
+        ReturnInfo ret = new ReturnInfo();
+        int code = userServiceImpl.changePassword(name, password,repassword);
+        ret.setCode(code);
+        return ret;
+    }
+
+    @RequestMapping("/checkName")
+    @ResponseBody
+    public ReturnInfo checkName(String name) {
+        ReturnInfo ret = new ReturnInfo();
+        List<User> list = userServiceImpl.checkName(name);
+        int code = list.size() > 0 ? 0 : 1;
+        ret.setCode(code);
+        return ret;
+    }
+
     @RequestMapping("/login")
     @ResponseBody
     public ReturnInfo login(String name, String password) {

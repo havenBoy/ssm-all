@@ -30,6 +30,18 @@
         where id = #{id}
     </update>
 
+    <!-- 通过name 查询用户-->
+    <select id="checkName" parameterType="java.lang.String" resultType="com.xiong.entity.User">
+        SELECT * FROM user
+        where username = #{name}
+    </select>
+
+    <!-- 修改用户密码 -->
+    <update id="changePassword" parameterType="java.lang.String">
+        UPDATE user u set u.password = #{repassword}
+        where u.username = #{name} and u.password = #{password}
+    </update>
+
     <!-- 删除用户信息 -->
     <delete id="delUserById" parameterType="java.lang.Integer">
         DELETE FROM user where id = #{id}

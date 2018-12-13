@@ -14,6 +14,10 @@ public interface UserMapper {
 
     public List<User> findAll();
 
+    public List<User> checkName(String name);
+
+    public int changePassword(@Param("name")String name, @Param("password")String password, @Param("repassword")String repassword);
+
     public List<User> findByPage(@Param("start") Integer start, @Param("end") Integer end);
 
     public int addUser(User user);

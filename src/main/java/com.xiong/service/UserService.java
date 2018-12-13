@@ -15,6 +15,10 @@ public interface UserService {
 
     public List<User> findAll();
 
+    public List<User> checkName(String name);
+
+    public int changePassword(String name, String password,String repassword);
+
     public List<User> findByPage(int page, int limit);
 
     public int addUser(User user);
