@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+       xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+
+    <!-- 组件扫描 -->
+    <context:component-scan base-package="com.**">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!-- 连接池 -->
+    <context:property-placeholder location="classpath:db.properties"/>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driver}"></property>
+        <property name="jdbcUrl" value="${jdbc.url}"></property>
+        <property name="user" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+        <property name="maxPoolSize" value="${c3p0.maxPoolSize}"></property>
+        <property name="minPoolSize" value="${c3p0.minPoolSize}"></property>
+        <property name="autoCommitOnClose" value="${c3p0.autoCommitOnClose}"></property>
+        <property name="checkoutTimeout" value="${c3p0.checkoutTimeout}"></property>
+        <property name="acquireIncrement" value="${c3p0.acquireRetryAttempts}"></property>
+    </bean>
+
+    <!-- 事务 -->
+    <bean id="dataSourceTransactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <tx:annotation-driven transaction-manager="dataSourceTransactionManager"/>
+
+    <!-- redis 配置,也可以把配置挪到properties配置文件中,再读取 -->
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg index="0" ref="jedisPoolConfig" />
+        <!-- 端口，默认6379 -->
+        <constructor-arg index="2" value="${redis.port}"  name="port" type="int"/>
+        <constructor-arg index="3" value="5000"  name="timeout" type="int"/>
+        <constructor-arg index="1" value="${redis.ip}" name="host" type="java.lang.String"/>
+        <!-- 如果你需要配置密码 <constructor-arg index="4" value="你的密码" name="password" type="java.lang.String"/>
+        -->
+    </bean>
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxIdle" value="${redis.maxIdle}"/><!-- 最大闲置 -->
+        <property name="maxWaitMillis" value="${redis.maxWait}" />
+        <property name="testOnBorrow" value="${redis.testOnBorrow}" />
+    </bean>
+
+    <!-- Spring 整合 Mybatis -->
+    <!--1. SqlSession  -->
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 指定数据源 -->
+        <property name="dataSource" ref="dataSource"></property>
+        <!-- MyBatis的配置文件 -->
+        <property name="configLocation" value="classpath:mybatis-config.xml"></property>
+        <!-- MyBatis的SQL映射文件 -->
+        <property name="mapperLocations" value="classpath:mybatis/mapper/*.xml"></property>
+        <property name="typeAliasesPackage" value="com.xiong.entity"></property>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.xiong.mapper"></property>
+    </bean>
+</beans>
