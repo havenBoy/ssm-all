@@ -54,7 +54,7 @@
             </div>
         </div>
         <div class="layui-input-inline login-btn" style="width: 85%">
-            <button type="submit" lay-submit lay-filter="sub" class="layui-btn">确认</button>
+            <button type="button" class="layui-btn" id="confirm" onclick="login();">确认</button>
         </div>
 
         <hr style="width: 85%" />
@@ -67,43 +67,42 @@
             document.onkeydown = function(e){
                 var ev = document.all ? window.event : e;
                 if(ev.keyCode==13) {
-                    //$('.layui-btn').click();
+                    login();
                 }
             }
             $("input[name='account']").focus();
         });
 
-        $("input[name='account']").blur(function(){
+
+        //回车绑定事件
+
+        function login() {
             var name = $("input[name='account']").val();
+            var password = $("input[name='password']").val();
+            var repassword = $("input[name='repassword']").val();
             $.ajax({
-                url: '${pageContext.request.getContextPath()}/checkName',
+                url: '${pageContext.request.getContextPath()}/rePassword',
                 dataType: 'json',
                 async: false,
                 data: {
-                    name : name
+                    name : name,
+                    password:password,
+                    repassword : repassword
                 },
                 type: 'POST', // 请求方式
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8',
                 //请求完成时的处理
                 success: function (ret) {
                     if(ret.code == 1) {
-                        layer.msg('用户名不存在，请重新输入!');
-                        $('#wr').removeAttr('hidden');
-                        $('#ri').attr('hidden','hidden');
+                        layer.msg('密码修改成功!',function () {
+                            window.location.href = "${pageContext.request.getContextPath()}/";
+                        });
                     } else {
-                        $('#ri').removeAttr('hidden');
-                        $('#wr').attr('hidden','hidden');
+                        layer.msg('密码修改失败!');
                     }
                 }
             });
-        });
-
-        $(".layui-btn").click(function(){
-            var name = $("input[name='account']").val();
-            var password = $("input[name='password']").val();
-            var repassword = $("input[name='repassword']").val();
-            layer.msg("di");
-        });
+        }
         // 为密码添加正则验证
         $('#pwd').blur(function() {
             var reg = /^[\w]{3,12}$/;
@@ -112,8 +111,30 @@
                 $('#pri').attr('hidden','hidden');
                 layer.msg('请输入合法密码');
             }else {
-                $('#pri').removeAttr('hidden');
-                $('#pwr').attr('hidden','hidden');
+                var name = $("input[name='account']").val();
+                var password = $("input[name='password']").val();
+                $.ajax({
+                    url: '${pageContext.request.getContextPath()}/checkUser',
+                    dataType: 'json',
+                    async: false,
+                    data: {
+                        name : name,
+                        password : password
+                    },
+                    type: 'POST', // 请求方式
+                    contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+                    //请求完成时的处理
+                    success: function (ret) {
+                        if(ret.code >= 1) {
+                        } else {
+                            layer.msg("用户不存在,请重新填写！",function () {
+                                $("input[name='account']").val("");
+                                $("input[name='password']").val("");
+                                $("input[name='account']").focus();
+                            });
+                        }
+                    }
+                });
             }
         });
     </script>

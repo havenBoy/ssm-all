@@ -15,7 +15,7 @@ public interface UserService {
 
     public List<User> findAll();
 
-    public List<User> checkName(String name);
+    public List<User> checkUser(String name, String password);
 
     public int changePassword(String name, String password,String repassword);
 

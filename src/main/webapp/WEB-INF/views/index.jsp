@@ -25,7 +25,6 @@
     </form>
 
     <script type="text/javascript">
-
         //绑定全局的回车事件
         $(function(){
             document.onkeydown = function(e){

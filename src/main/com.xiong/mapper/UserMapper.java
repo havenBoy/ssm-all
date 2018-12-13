@@ -14,7 +14,7 @@ public interface UserMapper {
 
     public List<User> findAll();
 
-    public List<User> checkName(String name);
+    public List<User> checkUser(@Param("name")String name, @Param("password")String password);
 
     public int changePassword(@Param("name")String name, @Param("password")String password, @Param("repassword")String repassword);
 

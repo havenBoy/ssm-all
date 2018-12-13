@@ -27,8 +27,8 @@ public class UserServiceImpl implements UserMapper{
     }
 
     @Override
-    public List<User> checkName(String name) {
-        return userMapper.checkName(name);
+    public List<User> checkUser(String name, String password) {
+        return userMapper.checkUser(name, password);
     }
 
     @Override

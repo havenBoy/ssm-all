@@ -49,13 +49,12 @@ public class IndexController {
         return ret;
     }
 
-    @RequestMapping("/checkName")
+    @RequestMapping("/checkUser")
     @ResponseBody
-    public ReturnInfo checkName(String name) {
+    public ReturnInfo checkName(String name, String password) {
         ReturnInfo ret = new ReturnInfo();
-        List<User> list = userServiceImpl.checkName(name);
-        int code = list.size() > 0 ? 0 : 1;
-        ret.setCode(code);
+        List<User> list = userServiceImpl.checkUser(name, password);
+        ret.setCode(list.size());
         return ret;
     }
 

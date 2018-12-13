@@ -31,9 +31,9 @@
     </update>
 
     <!-- 通过name 查询用户-->
-    <select id="checkName" parameterType="java.lang.String" resultType="com.xiong.entity.User">
+    <select id="checkUser" parameterType="java.lang.String" resultType="com.xiong.entity.User">
         SELECT * FROM user
-        where username = #{name}
+        where username = #{name} and password = #{password}
     </select>
 
     <!-- 修改用户密码 -->
