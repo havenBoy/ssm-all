@@ -8,10 +8,11 @@
     <meta name="renderer" content="webkit">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <!-- 引入静态文件 -->
-    <script src="${pageContext.request.getContextPath()}/js/jquery.js" charset="utf-8"></script>
-    <script src="${pageContext.request.getContextPath()}/layer/layui.js" charset="utf-8"></script>
-    <link rel="stylesheet" href="${pageContext.request.getContextPath()}/layer/css/layui.css"  media="all">
-    <link rel="stylesheet" href="${pageContext.request.getContextPath()}/static/css/style.css"  media="all">
+    <script src="../ssm/js/jquery.js" charset="utf-8"></script>
+    <script src="../ssm/layer/layui.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="../ssm/layer/css/layui.css"  media="all">
+    <link rel="stylesheet" href="../ssm/static/css/style.css"  media="all">
+    <link rel="icon" href="../ssm/static/image/favicon.ico" type="img/x-ico" />
     <!-- layer的初始化 -->
     <script type="text/javascript">
         $(function() {

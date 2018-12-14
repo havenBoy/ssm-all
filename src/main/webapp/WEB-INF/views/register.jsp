@@ -6,7 +6,7 @@
     <title>密码更换</title>
 </head>
 <html>
-<body background="${pageContext.request.getContextPath()}/static/image/login.jpg">
+<body background="../ssm/static/image/login.jpg">
 <div class="login-main">
     <header class="layui-elip" style="width: 82%">密码更换</header>
     <!-- 表单选项 -->
