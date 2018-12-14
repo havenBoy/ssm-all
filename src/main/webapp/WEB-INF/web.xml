@@ -48,9 +48,61 @@
     <!-- 匹配所有请求，此处也可以配置成 *.do 形式 -->
     <url-pattern>/</url-pattern>
   </servlet-mapping>
+  <!-- 配置Druid数据源 -->
+  <filter>
+    <filter-name>DruidWebStatFilter</filter-name>
+    <filter-class>com.alibaba.druid.support.http.WebStatFilter</filter-class>
+    <init-param>
+      <param-name>exclusions</param-name>
+      <param-value>*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>DruidWebStatFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
-  <welcome-file-list>
-    <welcome-file>index.html</welcome-file>
-  </welcome-file-list>
+  <!-- Sql监控 -->
+  <servlet>
+    <servlet-name>druidStatView</servlet-name>
+    <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
+    <init-param>
+      <!-- 允许清空统计数据 -->
+      <param-name>resetEnable</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <!-- 用户名 -->
+      <param-name>loginUsername</param-name>
+      <param-value>druid</param-value>
+    </init-param>
+    <init-param>
+      <!-- 密码 -->
+      <param-name>loginPassword</param-name>
+      <param-value>druid</param-value>
+    </init-param>
+    <init-param>
+      <!-- 运行访问的IP，使用，隔开 -->
+      <param-name>allow</param-name>
+      <param-value>druid</param-value>
+    </init-param>
+    <init-param>
+      <!-- 限制访问的IP，同理使用，隔开-->
+      <param-name>deny</param-name>
+      <param-value>192.168.13.20</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>druidStatView</servlet-name>
+    <url-pattern>/druid/*</url-pattern>
+  </servlet-mapping>
 
+  <error-page>
+    <error-code>404</error-code>
+    <location>/views/error/404.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>500</error-code>
+    <location>/views/error/500.jsp</location>
+  </error-page>
 </web-app>

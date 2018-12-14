@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -31,6 +32,10 @@ public class IndexController {
     private JedisPool jedisPool;
 
     @RequestMapping("/")
+    public String first() {
+        return "redirect:/index";
+    }
+    @RequestMapping("/index")
     public String index() {
         return "index";
     }
@@ -60,18 +65,20 @@ public class IndexController {
 
     @RequestMapping("/login")
     @ResponseBody
-    public ReturnInfo login(String name, String password) {
+    public ReturnInfo login(String name, String password,HttpServletRequest request) {
         ReturnInfo ret = new ReturnInfo();
         Jedis jedis = jedisPool.getResource();
         String nameSys = jedis.get("name");
         String passwordSys = jedis.get("password");
         if(!StringUtils.isEmpty(nameSys) && !StringUtils.isEmpty(passwordSys) ) {
             if(nameSys.equals(name) && passwordSys.equals(password)) {
+                request.getSession().setAttribute("name", name);
                 ret.setCode(1);
             }
         } else {
             List<User> list = userServiceImpl.findByNameAndPassword(name,password);
             if(list.size() > 0) {
+                request.getSession().setAttribute("name", name);
                 ret.setCode(1);
             } else {
                 ret.setCode(0);
