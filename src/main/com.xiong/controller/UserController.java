@@ -66,7 +66,7 @@ public class UserController {
         System.out.println(count);
         return returnInfo;
     }
-    @RequestMapping("/openAdd")
+    @RequestMapping("/openAdd.do")
     public String openAdd() {
         return  "add";
     }

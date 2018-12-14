@@ -21,6 +21,8 @@
         <spring.version>4.1.4.RELEASE</spring.version>
         <!-- mybatis版本号 -->
         <mybatis.version>3.4.1</mybatis.version>
+        <!-- mybatis版本号 -->
+        <druid.version>1.1.10</druid.version>
     </properties>
 
     <dependencies>
@@ -30,7 +32,6 @@
             <artifactId>taglibs-standard-impl</artifactId>
             <version>1.2.5</version>
         </dependency>
-
 
         <!-- 实现slf4j接口并整合 -->
         <dependency>
@@ -43,7 +44,12 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.7.16</version>
         </dependency>
-
+        <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
         <!-- JSON -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -64,6 +70,12 @@
             <groupId>com.mchange</groupId>
             <artifactId>c3p0</artifactId>
             <version>0.9.5.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.alibaba/druid -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>${druid.version}</version>
         </dependency>
 
         <!-- 实现slf4j接口并整合 -->

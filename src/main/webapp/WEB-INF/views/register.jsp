@@ -126,8 +126,11 @@
                     //请求完成时的处理
                     success: function (ret) {
                         if(ret.code >= 1) {
+                            $('#pri').removeAttr('hidden');
+                            $('#pwr').attr('hidden','hidden');
                         } else {
-                            layer.msg("用户不存在,请重新填写！",function () {
+                            layer.alert('用户与密码不匹配，请重新填写', {title: "系统提示"},function () {
+                                layer.closeAll();
                                 $("input[name='account']").val("");
                                 $("input[name='password']").val("");
                                 $("input[name='account']").focus();
