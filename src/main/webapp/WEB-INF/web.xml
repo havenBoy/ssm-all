@@ -31,6 +31,15 @@
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
   </listener>
 
+
+  <!--增加对静态资源的处理,当前的设置必须在Spring的Dispatcher的前面-->
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/js/*</url-pattern>
+    <url-pattern>/layer/*</url-pattern>
+    <url-pattern>/static/*</url-pattern>
+  </servlet-mapping>
+
   <!-- 配置DispatcherServlet -->
   <servlet>
     <servlet-name>SpringMVC</servlet-name>

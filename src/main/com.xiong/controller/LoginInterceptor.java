@@ -13,10 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
-
+        //首页和登录的请求不拦截
         if(httpServletRequest.getRequestURL().indexOf("/index") > 0 || httpServletRequest.getRequestURL().indexOf("/login") > 0) return  true;
         if(httpServletRequest.getSession().getAttribute("name") != null) return  true;
-        httpServletRequest.getRequestDispatcher("/WEB-INF/views/index.jsp").forward(httpServletRequest, httpServletResponse);
+        httpServletRequest.setAttribute("msg","请先登录！");
+        httpServletRequest.getRequestDispatcher("/views/index.jsp").forward(httpServletRequest, httpServletResponse);
         return false;
     }
 
