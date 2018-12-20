@@ -10,7 +10,7 @@
   - 1 spring相关     --    <version>4.1.4.RELEASE </version>
   - 2 mybatis相关  --    <version>3.4.1</version>
   - 3 spring-mybatis整合包  --   <version>1.3.1</version>
-  - 4 日志log4j 或者 logback    --   <version>1.2.3</version>
+  - 4 日志log4j    --   <version>1.2.3</version>
   - 5 数据库连接池(druid,c3p0)  --    <version>0.9.5.2</version>
   - 6 数据库驱动  --   <version>5.1.41</version>
   - 7 json转化包   --   <version>2.8.7</version>    --- fastjson
@@ -53,6 +53,15 @@
       <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
   
+  
+    <!--增加对静态资源的处理,当前的设置必须在Spring的Dispatcher的前面-->
+    <servlet-mapping>
+      <servlet-name>default</servlet-name>
+      <url-pattern>/js/*</url-pattern>
+      <url-pattern>/layer/*</url-pattern>
+      <url-pattern>/static/*</url-pattern>
+    </servlet-mapping>
+  
     <!-- 配置DispatcherServlet -->
     <servlet>
       <servlet-name>SpringMVC</servlet-name>
@@ -60,7 +69,7 @@
       <!-- 配置springMVC需要加载的配置文件-->
       <init-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>classpath:springmvc.xml</param-value>
+        <param-value>classpath:spring-mvc.xml</param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
       <async-supported>true</async-supported>
@@ -70,11 +79,63 @@
       <!-- 匹配所有请求，此处也可以配置成 *.do 形式 -->
       <url-pattern>/</url-pattern>
     </servlet-mapping>
+    <!-- 配置Druid数据源 -->
+    <filter>
+      <filter-name>DruidWebStatFilter</filter-name>
+      <filter-class>com.alibaba.druid.support.http.WebStatFilter</filter-class>
+      <init-param>
+        <param-name>exclusions</param-name>
+        <param-value>*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*</param-value>
+      </init-param>
+    </filter>
+    <filter-mapping>
+      <filter-name>DruidWebStatFilter</filter-name>
+      <url-pattern>/*</url-pattern>
+    </filter-mapping>
   
-    <welcome-file-list>
-      <welcome-file>index.html</welcome-file>
-    </welcome-file-list>
+    <!-- Sql监控 -->
+    <servlet>
+      <servlet-name>druidStatView</servlet-name>
+      <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
+      <init-param>
+        <!-- 允许清空统计数据 -->
+        <param-name>resetEnable</param-name>
+        <param-value>true</param-value>
+      </init-param>
+      <init-param>
+        <!-- 用户名 -->
+        <param-name>loginUsername</param-name>
+        <param-value>druid</param-value>
+      </init-param>
+      <init-param>
+        <!-- 密码 -->
+        <param-name>loginPassword</param-name>
+        <param-value>druid</param-value>
+      </init-param>
+      <init-param>
+        <!-- 运行访问的IP，使用，隔开 -->
+        <param-name>allow</param-name>
+        <param-value>druid</param-value>
+      </init-param>
+      <init-param>
+        <!-- 限制访问的IP，同理使用，隔开-->
+        <param-name>deny</param-name>
+        <param-value>192.168.13.20</param-value>
+      </init-param>
+    </servlet>
+    <servlet-mapping>
+      <servlet-name>druidStatView</servlet-name>
+      <url-pattern>/druid/*</url-pattern>
+    </servlet-mapping>
   
+    <error-page>
+      <error-code>404</error-code>
+      <location>/views/error/404.jsp</location>
+    </error-page>
+    <error-page>
+      <error-code>500</error-code>
+      <location>/views/error/500.jsp</location>
+    </error-page>
   </web-app>
   ```
 
@@ -88,17 +149,26 @@
          xmlns:tx="http://www.springframework.org/schema/tx"
          xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
          xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
-        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
-        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+  		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+  		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
   
   
       <!-- 组件扫描 -->
       <context:component-scan base-package="com.**">
           <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
       </context:component-scan>
+      <bean id="propertiesFactoryBean" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+          <property name="locations">
+              <list>
+                  <value>classpath:db.properties</value>
+              </list>
+          </property>
+      </bean>
   
-      <!-- 连接池 -->
+      <context:property-placeholder properties-ref="propertiesFactoryBean"/>
+  
+  <!--    &lt;!&ndash; 连接池c3p0 &ndash;&gt;
       <context:property-placeholder location="classpath:db.properties"/>
       <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
           <property name="driverClass" value="${jdbc.driver}"></property>
@@ -110,6 +180,27 @@
           <property name="autoCommitOnClose" value="${c3p0.autoCommitOnClose}"></property>
           <property name="checkoutTimeout" value="${c3p0.checkoutTimeout}"></property>
           <property name="acquireIncrement" value="${c3p0.acquireRetryAttempts}"></property>
+      </bean>-->
+      <!--数据连接池 druid -->
+      <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+          <property name="driverClassName" value="${jdbc.driver}" />
+          <property name="url" value="${jdbc.url}" />
+          <property name="username" value="${jdbc.username}" />
+          <property name="password" value="${jdbc.password}" />
+          <property name="filters" value="stat" />
+          <property name="maxActive" value="20" />
+          <property name="initialSize" value="1" />
+          <property name="maxWait" value="60000" />
+          <property name="minIdle" value="1" />
+          <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+          <property name="minEvictableIdleTimeMillis" value="300000"/>
+  
+          <property name="validationQuery" value="SELECT 'x'" />
+          <property name="testWhileIdle" value="true" />
+          <property name="testOnBorrow" value="false" />
+          <property name="testOnReturn" value="false" />
+          <property name="poolPreparedStatements" value="true" />
+          <property name="maxPoolPreparedStatementPerConnectionSize" value="50"/>
       </bean>
   
       <!-- 事务 -->
@@ -118,6 +209,22 @@
           <property name="dataSource" ref="dataSource"></property>
       </bean>
       <tx:annotation-driven transaction-manager="dataSourceTransactionManager"/>
+  
+      <!-- redis 配置,也可以把配置挪到properties配置文件中,再读取 -->
+      <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+          <constructor-arg index="0" ref="jedisPoolConfig" />
+          <!-- 端口，默认6379 -->
+          <constructor-arg index="2" value="${redis.port}"  name="port" type="int"/>
+          <constructor-arg index="3" value="5000"  name="timeout" type="int"/>
+          <constructor-arg index="1" value="${redis.ip}" name="host" type="java.lang.String"/>
+          <!-- 如果你需要配置密码 <constructor-arg index="4" value="你的密码" name="password" type="java.lang.String"/>
+          -->
+      </bean>
+      <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+          <property name="maxIdle" value="${redis.maxIdle}"/><!-- 最大闲置 -->
+          <property name="maxWaitMillis" value="${redis.maxWait}" />
+          <property name="testOnBorrow" value="${redis.testOnBorrow}" />
+      </bean>
   
       <!-- Spring 整合 Mybatis -->
       <!--1. SqlSession  -->
@@ -169,25 +276,20 @@
 
 * 日志记录
 
-  * logback.xml
+  * log4j.properties
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <configuration debug="true">
-        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder>
-                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-        <root level="debug">
-            <appender-ref ref="STDOUT"/>
-        </root>
-    </configuration>
+    ```properties
+    log4j.rootLogger=debug,Console
+    
+    log4j.appender.Console=org.apache.log4j.ConsoleAppender
+    log4j.appender.Console.Target=System.out
+    log4j.appender.Console.layout=org.apache.log4j.PatternLayout
+    log4j.appender.Console.layout.ConversionPattern=[%p][%d{yyyy-MM-dd HH\:mm\:ss,SSS}][%c]%m%n
     ```
 
 * mapper.xml
 
-  *  ***Mapper.xml
+  * ***Mapper.xml
 
     ```xml
     <?xml version="1.0" encoding="UTF-8" ?>
@@ -196,30 +298,306 @@
             "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
     
     <mapper namespace="com.xiong.mapper.UserMapper">
-        <!--不做映射的 -->
-        <select id="findAll" resultType="com.xiong.entity.User" >
-            select * from user
-        </select>
-        <!--做映射的 -->
-    	<select id="getAllEmps" resultMap="myEmpsAndDept" >
-    		select e.id eid, e.last_name,e.email,e.gender, d.id did, d.dept_name
-    		from tbl_employee e ,tbl_dept d 
-    		where e.d_id = d.id 
-    	</select>
-    	<resultMap type="com.atguigu.ssm.beans.Employee" id="myEmpsAndDept">
-    		<id column="eid" property="id"/>
-    		<result column="last_name" property="lastName"/>
-    		<result column="email" property="email"/>
-    		<result column="gender" property="gender"/>
-    		
-    		<association property="dept"
-                         javaType="com.atguigu.ssm.beans.Department">
-    			<id column="did" property="id"/>
-    			<result column="dept_name" property="departmentName"/>
-    		</association>
-    	</resultMap>
-    </mapper>
     
+        <select id="findByPage" parameterType="java.lang.Integer" resultType="com.xiong.entity.User" >
+            select * from user
+             order by id
+                limit #{start},#{end}
+        </select>
+    
+        <select id="findByNameAndPassword" parameterType="java.lang.String" resultType="com.xiong.entity.User">
+            SELECT * FROM user
+            where username = #{name} and password = #{password}
+        </select>
+        <select id="findAll" resultType="com.xiong.entity.User" >
+            select * from user order by id
+        </select>
+    
+        <insert id="addUser" parameterType="com.xiong.entity.User">
+            INSERT INTO user (id,username,age,address,desc) VALUES (#{id},#{username},#{age},#{address},#{desc})
+        </insert>
+    
+        <!-- 修改用户信息 -->
+        <update id="saveUser" parameterType="com.xiong.entity.User">
+            UPDATE user u set u.username = #{username}, u.age = #{age},
+            u.address = #{address}, u.desc = #{desc}
+            where id = #{id}
+        </update>
+    
+        <!-- 通过name 查询用户-->
+        <select id="checkUser" parameterType="java.lang.String" resultType="com.xiong.entity.User">
+            SELECT * FROM user
+            where username = #{name} and password = #{password}
+        </select>
+    
+        <!-- 修改用户密码 -->
+        <update id="changePassword" parameterType="java.lang.String">
+            UPDATE user u set u.password = #{repassword}
+            where u.username = #{name} and u.password = #{password}
+        </update>
+    
+        <!-- 删除用户信息 -->
+        <delete id="delUserById" parameterType="java.lang.Integer">
+            DELETE FROM user where id = #{id}
+        </delete>
+    
+    </mapper>
     ```
 
-​          
+*  pom.xml   配置
+
+  ~~~java
+  <?xml version="1.0" encoding="UTF-8"?>
+  
+  <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+  
+      <groupId>com.xiong</groupId>
+      <artifactId>ssm-all</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <packaging>war</packaging>
+  
+      <name>ssm-all Maven</name>
+      <!-- FIXME change it to the project's website -->
+      <url>http://127.0.0.1:8080/ssm/</url>
+  
+      <properties>
+          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+          <maven.compiler.source>1.7</maven.compiler.source>
+          <maven.compiler.target>1.7</maven.compiler.target>
+          <!-- spring版本号 -->
+          <spring.version>4.1.4.RELEASE</spring.version>
+          <!-- mybatis版本号 -->
+          <mybatis.version>3.4.1</mybatis.version>
+          <!-- mybatis版本号 -->
+          <druid.version>1.1.10</druid.version>
+      </properties>
+  
+      <dependencies>
+  
+          <dependency>
+              <groupId>org.apache.taglibs</groupId>
+              <artifactId>taglibs-standard-impl</artifactId>
+              <version>1.2.5</version>
+          </dependency>
+  
+          <!-- 实现slf4j接口并整合 -->
+          <dependency>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
+              <version>1.2.17</version>
+          </dependency>
+          <dependency>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-log4j12</artifactId>
+              <version>1.7.16</version>
+          </dependency>
+          <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+          <dependency>
+              <groupId>javax.servlet</groupId>
+              <artifactId>javax.servlet-api</artifactId>
+              <version>3.1.0</version>
+          </dependency>
+          <!-- JSON -->
+          <dependency>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>jackson-databind</artifactId>
+              <version>2.8.9</version>
+          </dependency>
+  
+          <!-- 数据库驱动 -->
+          <dependency>
+              <groupId>mysql</groupId>
+              <artifactId>mysql-connector-java</artifactId>
+              <version>5.1.41</version>
+              <scope>runtime</scope>
+          </dependency>
+  
+          <!-- 数据库连接池 -->
+          <dependency>
+              <groupId>com.mchange</groupId>
+              <artifactId>c3p0</artifactId>
+              <version>0.9.5.2</version>
+          </dependency>
+          <!-- https://mvnrepository.com/artifact/com.alibaba/druid -->
+          <dependency>
+              <groupId>com.alibaba</groupId>
+              <artifactId>druid</artifactId>
+              <version>${druid.version}</version>
+          </dependency>
+  
+          <!-- 实现slf4j接口并整合 -->
+          <dependency>
+              <groupId>ch.qos.logback</groupId>
+              <artifactId>logback-classic</artifactId>
+              <version>1.2.3</version>
+          </dependency>
+  
+          <!-- mybatis/spring整合包 -->
+          <dependency>
+              <groupId>org.mybatis</groupId>
+              <artifactId>mybatis-spring</artifactId>
+              <version>1.3.1</version>
+          </dependency>
+  
+          <!-- mybatis 包 -->
+          <dependency>
+              <groupId>org.mybatis</groupId>
+              <artifactId>mybatis</artifactId>
+              <version>3.2.8</version>
+          </dependency>
+  
+          <!-- redis begin -->
+          <dependency>
+              <groupId>redis.clients</groupId>
+              <artifactId>jedis</artifactId>
+              <version>2.8.0</version>
+          </dependency>
+          <!-- redis end -->
+  
+          <!-- Spring -->
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-core</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-beans</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-context</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-jdbc</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-tx</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-web</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-webmvc</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework</groupId>
+              <artifactId>spring-test</artifactId>
+              <version>${spring.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>4.11</version>
+              <scope>test</scope>
+          </dependency>
+      </dependencies>
+  
+      <build>
+          <finalName>ssm-all</finalName>
+          <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+              <plugins>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-compiler-plugin</artifactId>
+                      <configuration>
+                          <!-- 设置JDK版本 -->
+                          <source>1.8</source>
+                          <target>1.8</target>
+                      </configuration>
+                  </plugin>
+              </plugins>
+          </pluginManagement>
+      </build>
+  </project>
+  
+  ~~~
+
+  * spring-mvc.xml   
+
+    ~~~xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:mvc="http://www.springframework.org/schema/mvc"
+           xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/mvc
+           http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd">
+    
+        <!-- 扫描web相关的bean -->
+        <context:component-scan base-package="com"/>
+    
+        <!-- 开启SpringMVC注解模式 -->
+        <mvc:annotation-driven/>
+    
+        <!-- 静态资源默认servlet配置 -->
+        <mvc:default-servlet-handler/>
+    
+        <!-- 配置jsp 显示ViewResolver -->
+        <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+            <property name="prefix" value="/views/"/>
+            <property name="suffix" value=".jsp"/>
+        </bean>
+        <!-- 拦截器 -->
+        <mvc:interceptors>
+            <mvc:interceptor>
+                <mvc:mapping path="/**" />
+                <!-- 需排除拦截的地址 -->
+                <bean class="com.xiong.controller.LoginInterceptor"></bean>
+            </mvc:interceptor>
+        </mvc:interceptors>
+    
+    </beans>
+    ~~~
+
+  * db.properties
+
+    ~~~properties
+    jdbc.driver=com.mysql.jdbc.Driver
+    #数据库地址
+    #jdbc.url=jdbc:mysql://192.168.182.130:3306/ssm?useUnicode=true&characterEncoding=utf8&useSSL=false
+    jdbc.url=jdbc:mysql://172.16.20.39:3306/ssm?useUnicode=true&characterEncoding=utf8&useSSL=false
+    #用户名
+    jdbc.username=root
+    #密码
+    jdbc.password=123456
+    #最大连接数
+    c3p0.maxPoolSize=30
+    #最小连接数
+    c3p0.minPoolSize=10
+    #关闭连接后不自动commit
+    c3p0.autoCommitOnClose=false
+    #获取连接超时时间
+    c3p0.checkoutTimeout=10000
+    #当获取连接失败重试次数
+    c3p0.acquireRetryAttempts=2
+    #redis对应的端口
+    redis.port=6379
+    #redis对应的IP地址
+    redis.ip=172.16.20.39
+    
+    redis.maxIdle=100
+    redis.maxActive=300
+    redis.maxWait=1000
+    redis.testOnBorrow=true
+    redis.timeout=100000
+    
+    ~~~
+
+
